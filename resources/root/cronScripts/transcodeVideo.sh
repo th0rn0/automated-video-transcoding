@@ -29,12 +29,16 @@ FILES=${INPUT_PATH}/*
 
 mkdir -p "${OUTPUT_PATH}/originals"
 
-for f in $FILES
-do
-  echo "Processing $f file..."
-  # take action on each file. $f store current file name
-  name=$(echo "$f" | cut -f 1 -d '.')
-  transcode-video --add-audio all "${f}" -o "/tmp/$(basename -- $name).mkv"
-  mv "/tmp/$(basename -- $name).mkv" "${OUTPUT_PATH}/$(basename -- $name).mkv"
-  mv "$f" "${OUTPUT_PATH}/originals/$(basename -- $f)"
-done
+if find "$INPUT_PATH" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+	for f in $FILES
+	do
+	  echo "Processing $f file..."
+	  # take action on each file. $f store current file name
+	  name=$(echo "$f" | cut -f 1 -d '.')
+	  transcode-video --add-audio all "${f}" -o "/tmp/$(basename -- $name).mkv"
+	  mv "/tmp/$(basename -- $name).mkv" "${OUTPUT_PATH}/$(basename -- $name).mkv"
+	  mv "$f" "${OUTPUT_PATH}/originals/$(basename -- $f)"
+	done
+else
+	echo "No Files Found"
+fi
