@@ -1,7 +1,6 @@
-# ntodd/video-transcoding:0.21.1
-
+# Based on ntodd/video-transcoding
 FROM ntodd/ruby-xenial:2.4.0
-LABEL maintainer="Nate Todd <nate@pixelauthorityllc.com>"
+LABEL maintainer="Thornton Phillis <dev@th0rn0.co.uk>"
 
 ENV GEM_VERSION 0.25.2
 ENV NASM_VERSION 2.13.01
@@ -135,11 +134,23 @@ RUN set -ex \
 
 RUN set -ex \
   # Install application dependencies
+  && apt-get install cron \
   && apt-get purge -y --auto-remove $buildDeps \
   && rm -rf /var/lib/apt/lists/* \
   && gem install video_transcoding -v "$GEM_VERSION" \
-  && mkdir /data
+  && mkdir /input \
+  && mkdir /output
 
-WORKDIR /data
+WORKDIR /input
 
-CMD [ "/bin/bash" ]
+# Add Automation Scripts
+COPY resources/root/cronScripts/transcodeVideo.sh /cronScripts/transcodeVideo.sh
+COPY resources/root/cron.d/transcode-video-cron /etc/cron.d/transcode-video-cron
+
+RUN chmod +x /cronScripts/transcodeVideo.sh
+RUN chmod 0644 /etc/cron.d/transcode-video-cron
+RUN crontab /etc/cron.d/transcode-video-cron
+RUN touch /var/log/cron.log
+
+# Run Cron
+CMD ["cron", "-f"]
